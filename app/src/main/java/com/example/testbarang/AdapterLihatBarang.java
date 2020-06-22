@@ -1,19 +1,20 @@
 package com.example.testbarang;
 
+import android.app.Activity;
+import android.app.Dialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.content.Context;
 import java.util.ArrayList;
 import androidx.recyclerview.widget.RecyclerView;
-
 public class AdapterLihatBarang extends
-RecyclerView.Adapter<AdapterLihatBarang.ViewHolder> {
-
+        RecyclerView.Adapter<AdapterLihatBarang.ViewHolder> {
     private ArrayList<Barang> daftarBarang;
     private Context context;
-
+    FirebaseDataListener listener;
     public AdapterLihatBarang(ArrayList<Barang> barangs, Context ctx){
         /**
          * Inisiasi data dan variabel yang akan digunakan
@@ -21,7 +22,6 @@ RecyclerView.Adapter<AdapterLihatBarang.ViewHolder> {
         daftarBarang = barangs;
         context = ctx;
     }
-
     class ViewHolder extends RecyclerView.ViewHolder {
         /**
          * Inisiasi View
@@ -29,24 +29,23 @@ RecyclerView.Adapter<AdapterLihatBarang.ViewHolder> {
          * dan juga view nya hanyalah satu TextView
          */
         TextView tvTitle;
-
         ViewHolder(View v) {
             super(v);
             tvTitle = (TextView) v.findViewById(R.id.tv_namabarang);
         }
     }
-
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         /**
          * Inisiasi ViewHolder
          */
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_barang, parent, false);
+        View v =
+                LayoutInflater.from(parent.getContext()).inflate(R.layout.item_barang, parent,
+                        false);
         // mengeset ukuran view, margin, padding, dan parameter layout lainnya
         ViewHolder vh = new ViewHolder(v);
         return vh;
     }
-
     @Override
     public void onBindViewHolder(ViewHolder holder, final int position) {
         /**
@@ -65,19 +64,50 @@ RecyclerView.Adapter<AdapterLihatBarang.ViewHolder> {
             @Override
             public boolean onLongClick(View view) {
                 /**
-                 * untuk latihan Selanjutnya ,fungsi Delete dan Update data
+                 *  Kodingan untuk delete dan update data
                  */
+                final Dialog dialog = new Dialog(context);
+                dialog.setContentView(R.layout.dialog_view);
+                dialog.setTitle("Pilih Aksi");
+                dialog.show();
+
+                Button editButton = (Button) dialog.findViewById(R.id.bt_edit_data);
+                Button delButton = (Button) dialog.findViewById(R.id.bt_delete_data);
+
+                //apabila tombol edit diklik
+                editButton.setOnClickListener(
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                dialog.dismiss();
+                                context.startActivity(LihatBarang.getActIntent((Activity) context).putExtra("data", daftarBarang.get(position)));
+                            }
+                        }
+                );
+
+                //apabila tombol delete diklik
+                delButton.setOnClickListener(
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                dialog.dismiss();
+                                listener.onDeleteData(daftarBarang.get(position), position);
+                            }
+                        }
+                );
                 return true;
             }
         });
         holder.tvTitle.setText(name);
     }
-
     @Override
     public int getItemCount() {
         /**
          * Mengembalikan jumlah item pada barang
          */
         return daftarBarang.size();
+    }
+    public interface FirebaseDataListener{
+        void onDeleteData(Barang barang, int position);
     }
 }
